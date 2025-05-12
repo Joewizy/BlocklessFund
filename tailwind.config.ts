@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom colors for FundNGN
+				fundngn: {
+					green: "#008751",
+					gold: "#F7C35F",
+					white: "#FFFFFF",
+					lightgreen: "#4CAF50",
+					darkgreen: "#00602D",
 				}
 			},
 			borderRadius: {
@@ -84,11 +93,28 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0)',
+					},
+					'50%': {
+						transform: 'translateY(-5px)',
+					},
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 5s ease-in-out infinite',
+			},
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+				poppins: ['Poppins', 'sans-serif'],
+			},
+			backgroundImage: {
+				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+				'hero-pattern': 'url("/hero-pattern.svg")',
 			}
 		}
 	},
