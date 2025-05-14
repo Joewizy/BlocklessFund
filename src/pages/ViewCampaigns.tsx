@@ -7,87 +7,152 @@ import { useEffect, useState } from "react";
 import { readContract } from "@wagmi/core";
 import { useConfig } from "wagmi";
 import { calculateDaysLeft } from "@/utils/conversionUtils";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 // Default campaign image
 const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1605810230434-7631ac76ec81";
+const PECTRA_IMAGE = "https://images.unsplash.com/photo-1553775927-a071d5a6a39a?q=80&w=2774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
 
 const ViewCampaigns = () => {
-    const config = useConfig();
-    const [campaigns, setCampaigns] = useState<CampaignCardProps[]>([]);
-    const [loading, setLoading] = useState(true);
+  const config = useConfig();
+  const navigate = useNavigate();
+  const [campaigns, setCampaigns] = useState<CampaignCardProps[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function fetchCampaigns() {
-            try {
-                const response = await readContract(config, {
-                    abi: crowdfundingAbi,
-                    address: crowdfundingAddress,
-                    functionName: "getCampaign",
-                    args: [1n], 
-                });
+  useEffect(() => {
+    async function fetchCampaigns() {
+      try {
+        const campaignCount = await readContract(config, {
+          abi: crowdfundingAbi,
+          address: crowdfundingAddress,
+          functionName: "getCampaignCounts",
+        });
 
-                const campaignData = transformCampaignData(response);
-                setCampaigns([campaignData]);
-            } catch (error) {
-                console.error("Error fetching campaigns:", error);
-            } finally {
-                setLoading(false);
-            }
+        const count = Number(campaignCount);
+
+        if (count === 0) {
+          setLoading(false);
+          return;
         }
 
-        fetchCampaigns();
-    }, [config]);
+        // Create an array of promises to fetch each campaign
+        const campaignPromises = [];
+        for (let i = 1; i <= count; i++) {
+          campaignPromises.push(
+            readContract(config, {
+              abi: crowdfundingAbi,
+              address: crowdfundingAddress,
+              functionName: "getCampaign",
+              args: [BigInt(i)],
+            })
+          );
+        }
 
-    // Transform blockchain response to CampaignCardProps
-    const transformCampaignData = (data: any): CampaignCardProps => {
-        const daysLeft = calculateDaysLeft(Number(data.deadline));
-        
-        return {
-            ...data,
-            imageUrl: DEFAULT_IMAGE,
-            daysLeft,
-            category: "Technology",
-            raisedAmount: data.amountRaised,
-            goalAmount: data.goal,
-        };
-    };
-
-    if (loading) {
-        return (
-            <section className="py-16 px-4 sm:px-6 lg:px-8">
-                <div className="container mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2, 3].map((i) => (
-                            <Skeleton key={i} className="h-[400px] w-full rounded-xl" />
-                        ))}
-                    </div>
-                </div>
-            </section>
+        const campaignResults = await Promise.all(campaignPromises);
+        const validCampaigns = campaignResults.filter(
+          (campaign) =>
+            campaign.title !== "" &&
+            campaign.description !== "" &&
+            campaign.goal !== 0 &&
+            campaign.creator !== "0x0000000000000000000000000000000000000000"
         );
+
+        // Transform the campaign data
+        const transformedCampaigns = validCampaigns.map((data, index) =>
+          transformCampaignData(data, BigInt(index + 1))
+        );
+        setCampaigns(transformedCampaigns);
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
+    fetchCampaigns();
+  }, [config]);
+
+  // Transform blockchain response to CampaignCardProps
+  const transformCampaignData = (data: any, id: bigint): CampaignCardProps => {
+    const daysLeft = calculateDaysLeft(Number(data.deadline));
+
+    return {
+      id,
+      creator: data.creator,
+      title: data.title,
+      description: data.description,
+      goalAmount: data.goal,
+      raisedAmount: data.amountRaised,
+      startTime: data.startTime,
+      deadline: data.deadline,
+      completed: data.completed,
+      imageUrl: PECTRA_IMAGE,
+      daysLeft,
+      category: data.category || "other",
+    };
+  };
+
+  if (loading) {
     return (
-        <section className="py-16 px-4 sm:px-6 lg:px-8">
-            <div className="container mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {campaigns.map((campaign) => (
-                        <CampaignCard
-                            key={Number(campaign.id)}
-                            {...campaign}
-                            creator={campaign.creator}
-                            title={campaign.title}
-                            description={campaign.description}
-                            goalAmount={campaign.goalAmount}
-                            raisedAmount={campaign.raisedAmount}
-                            daysLeft={campaign.daysLeft}
-                            category={campaign.category}
-                            imageUrl={campaign.imageUrl}
-                        />
-                    ))}
-                </div>
-            </div>
-        </section>
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Community Campaigns</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[400px] w-full rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </section>
     );
+  }
+
+  if (campaigns.length === 0) {
+    return (
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Community Campaigns</h1>
+          <div className="text-center py-20">
+            <h3 className="text-xl font-medium mb-2">No campaigns found</h3>
+            <p className="text-muted-foreground">
+              Be the first to create a campaign for the community!
+            </p>
+            <Button
+              className="gap-5 m-10"
+              onClick={() => navigate("/create-campaign")}
+            >
+              New Campaign
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Community Campaigns</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {campaigns.map((campaign) => (
+            <CampaignCard
+              key={Number(campaign.id)}
+              {...campaign}
+              creator={campaign.creator}
+              title={campaign.title}
+              description={campaign.description}
+              goalAmount={campaign.goalAmount}
+              raisedAmount={campaign.raisedAmount}
+              daysLeft={campaign.daysLeft}
+              category={campaign.category}
+              imageUrl={campaign.imageUrl}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 };
 
 export default ViewCampaigns;

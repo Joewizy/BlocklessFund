@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +7,7 @@
 :root {
   --background: 0 0% 100%; /* Pure white */
   --foreground: 240 10% 4%; /* Near-black for maximum contrast */
-  
+
   --card: 0 0% 100%;
   --card-foreground: 240 10% 4%;
 
@@ -34,7 +34,7 @@
   --ring: 213 94% 48%;
 
   --radius: 0.75rem;
-  
+
   --sidebar-background: 240 6% 10%;
   --sidebar-foreground: 0 0% 100%;
   --sidebar-primary: 213 94% 48%;
@@ -52,10 +52,15 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-poppins font-semibold tracking-tighter;
   }
 
@@ -94,11 +99,7 @@
 
 /* Hero Section Enhancements */
 .hero-gradient {
-  background: linear-gradient(
-    45deg,
-    hsl(var(--primary) / 0.03) 0%,
-    hsl(var(--secondary) / 0.03) 100%
-  );
+  background: linear-gradient(45deg, hsl(var(--primary) / 0.03) 0%, hsl(var(--secondary) / 0.03) 100%);
 }
 
 .hero-heading {
@@ -124,15 +125,14 @@
   :root {
     --background: 0 0% 100% !important; /* Force white background */
     --foreground: 240 10% 4% !important;
-    
+
     --card: 0 0% 100% !important;
     --card-foreground: 240 10% 4% !important;
-    
+
     --muted: 240 5% 96% !important;
     --muted-foreground: 240 5% 35% !important;
-    
+
     --border: 240 6% 90% !important;
     --input: 240 6% 90% !important;
   }
 }
-

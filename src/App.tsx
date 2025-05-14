@@ -5,9 +5,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CreateCampaignPage from "./pages/Create-Campaign-Page";
-import { Providers } from "./providers";
 import Proposals from "./pages/Proposals";
 import ViewCampaigns from "./pages/ViewCampaigns";
+import { Providers } from "./providers";
+import Layout from "@/components/Layout"; 
 
 const App = () => (
   <Providers>
@@ -16,11 +17,15 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/create-campaign" element={<CreateCampaignPage />} />
-          <Route path="/proposal" element={<Proposals />} />
-          <Route path="/campaigns" element={<ViewCampaigns />} />
-          {/* Add other routes here */}
+          {/* Layout routes (with Navbar/Footer) */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Index />} />
+            <Route path="create-campaign" element={<CreateCampaignPage />} />
+            <Route path="proposal" element={<Proposals />} />
+            <Route path="campaigns" element={<ViewCampaigns />} />
+          </Route>
+
+          {/* Routes without layout (optional) */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

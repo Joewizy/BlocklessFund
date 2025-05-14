@@ -10,21 +10,23 @@ import {Select, SelectContent, SelectItem, SelectTrigger,SelectValue,} from "@/c
 import { crowdfundingAbi, crowdfundingAddress } from "@/constants";
 import { DaysToSeconds } from "@/utils/conversionUtils";
 import { toast } from "sonner";
-import { useConfig, useAccount, useChainId, useWriteContract } from "wagmi";
+import { useConfig, useWriteContract } from "wagmi";
 import { waitForTransactionReceipt } from "@wagmi/core";
+import { useNavigate } from "react-router-dom";
+import { parseTokenAmount } from "@/utils/conversionUtils";
 
 const formSchema = z.object({
   title: z.string().min(5, {
     message: "Title must be at least 5 characters.",
   }),
-  description: z.string().min(50, {
-    message: "Description must be at least 50 characters.",
+  description: z.string().min(30, {
+    message: "Description must be at least 30 characters.",
   }),
   amountGoal: z.coerce.number().min(1, {
     message: "Goal must be at least greater than $1",
   }),
   duration: z.coerce.number().min(1, {
-    message: "Duration must be at least greater than 1day",
+    message: "Duration must be at least greater than 1 day",
   }),
   category: z.enum(
     ["other", "science", "social", "tech", "environment", "education"] as const
@@ -32,6 +34,7 @@ const formSchema = z.object({
 });
 
 export function CreateCampaignForm() {
+  const navigate = useNavigate();
     const config = useConfig();
     const { data: hash, isPending, error, writeContractAsync } = useWriteContract();
 
@@ -48,24 +51,28 @@ export function CreateCampaignForm() {
 
   async function createCampaign(title: string, description: string, amountGoal: number, duration: number) {
     try {
-        const response = await writeContractAsync({
-            abi: crowdfundingAbi,
-            address: crowdfundingAddress as `0x${string}`,
-            functionName: "createCampaign",
-            args: [title, description, BigInt(amountGoal), BigInt(DaysToSeconds(duration))]
-        });
-
-        const approvalReceipt = await waitForTransactionReceipt(config, {
-            hash: response,
-        });
-        
-        console.log("Campaign created:", approvalReceipt);
-        toast.success("Campaign created Successfully");
+      const formattedAmount = parseTokenAmount(amountGoal, 18);
+  
+      const response = await writeContractAsync({
+        abi: crowdfundingAbi,
+        address: crowdfundingAddress as `0x${string}`,
+        functionName: "createCampaign",
+        args: [title, description, formattedAmount, BigInt(DaysToSeconds(duration))],
+      });
+  
+      const approvalReceipt = await waitForTransactionReceipt(config, {
+        hash: response,
+      });
+  
+      console.log("Campaign created:", approvalReceipt);
+      toast.success("Campaign created Successfully");
+      navigate("/campaigns");
     } catch (error) {
-        console.error(error);
-        toast.error(`Could not create campaign: ${error.message}`);
+      console.error(error);
+      toast.error(`Could not create campaign: ${error.message}`);
     }
   }
+  
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
