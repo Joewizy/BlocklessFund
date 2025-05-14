@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Hero = () => {
   return (
@@ -20,8 +21,14 @@ const Hero = () => {
                 Explore Campaigns
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button variant="outline" className="border-fundngn-green text-fundngn-green hover:bg-fundngn-green hover:text-white text-lg px-6 py-6 h-auto">
-                Start a Campaign
+              <Button 
+                variant="outline" 
+                className="border-fundngn-green text-fundngn-green hover:bg-fundngn-green hover:text-white text-lg px-6 py-6 h-auto"
+                asChild
+              >
+                <Link to="/create-campaign">
+                  Start a Campaign
+                </Link>
               </Button>
             </div>
             <div className="flex flex-wrap gap-4 pt-4">

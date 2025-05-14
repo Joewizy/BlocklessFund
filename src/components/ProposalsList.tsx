@@ -1,128 +1,145 @@
+"use client";
+import { crowdfundingAddress, crowdfundingAbi } from "@/constants";
+import ProposalCard from "@/components/ProposalCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProposalProps } from "@/utils/interfaces";
+import { useEffect, useState } from "react";
+import { readContract } from "@wagmi/core";
+import { useConfig } from "wagmi";
+import { Button } from '@/components/ui/button';
 
-import React, { useState } from 'react';
-import ProposalCard, { ProposalProps } from './ProposalCard';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { List, ChevronDown } from 'lucide-react';
+interface ViewProposalsProps {
+  setIsDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
 
-// Sample proposal data (this would come from your API in a real app)
-const sampleProposals: ProposalProps[] = [
-  {
-    id: '1',
-    title: 'Fund School Building in Lagos',
-    description: 'This proposal aims to raise funds for building a new primary school in the underserved area of Lagos. The school will provide education to approximately 500 children.',
-    creator: 'Adebayo Ogunlesi',
-    createdAt: new Date(2025, 4, 5),
-    endDate: new Date(2025, 4, 15),
-    votesFor: 230,
-    votesAgainst: 45,
-    status: 'active',
-    commentCount: 32
-  },
-  {
-    id: '2',
-    title: 'Clean Water Initiative for Rural Communities',
-    description: 'A project to install water purification systems in 15 villages across northern Nigeria, providing clean drinking water to over 10,000 people.',
-    creator: 'Ngozi Okonjo',
-    createdAt: new Date(2025, 3, 22),
-    endDate: new Date(2025, 4, 6), 
-    votesFor: 340,
-    votesAgainst: 20,
-    status: 'approved',
-    commentCount: 47
-  },
-  {
-    id: '3',
-    title: 'Solar Power for Community Center',
-    description: 'Install solar panels on the roof of the community center to reduce electricity costs and provide sustainable energy.',
-    creator: 'Chinua Achebe',
-    createdAt: new Date(2025, 3, 18),
-    endDate: new Date(2025, 3, 28),
-    votesFor: 120,
-    votesAgainst: 135,
-    status: 'rejected',
-    commentCount: 29
-  },
-  {
-    id: '4',
-    title: 'Mobile Health Clinic for Rural Areas',
-    description: 'Fund a mobile health clinic that will travel to rural areas, providing basic healthcare services to communities without access to medical facilities.',
-    creator: 'Amina Mohammed',
-    createdAt: new Date(2025, 4, 10),
-    endDate: new Date(2025, 4, 24),
-    votesFor: 189,
-    votesAgainst: 32,
-    status: 'active',
-    commentCount: 26
-  },
-];
+const ViewProposals = ({ setIsDialogOpen }: ViewProposalsProps) => {
+  const config = useConfig();
+  const [proposals, setProposals] = useState<ProposalProps[]>([]);
+  const [loading, setLoading] = useState(true);
 
-type StatusFilter = 'all' | 'active' | 'approved' | 'rejected' | 'pending';
+  useEffect(() => {
+    async function fetchProposals() {
+      try {
+        const proposalCount = await readContract(config, {
+          abi: crowdfundingAbi,
+          address: crowdfundingAddress,
+          functionName: "getProposalCounts",
+        });
 
-const ProposalsList: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-
-  const filteredProposals = sampleProposals.filter(proposal => {
-    const matchesSearch = proposal.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          proposal.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || proposal.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <List className="h-5 w-5 text-fundngn-green" />
-          <h2 className="text-2xl font-semibold">Community Proposals</h2>
-        </div>
+        const count = Number(proposalCount);
         
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Input
-            placeholder="Search proposals..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-xs"
-          />
-          <div className="relative">
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-1"
-            >
-              Status: {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-            <div className="absolute mt-1 right-0 w-40 bg-white shadow-lg rounded-md border border-gray-200 z-10 hidden">
-              {(['all', 'active', 'approved', 'rejected', 'pending'] as const).map((status) => (
-                <button
-                  key={status}
-                  className="w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                  onClick={() => setStatusFilter(status)}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              ))}
-            </div>
+        if (count === 0) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch all proposals
+        const proposalPromises = [];
+        for (let i = 1; i <= count; i++) {
+          proposalPromises.push(
+            readContract(config, {
+              abi: crowdfundingAbi,
+              address: crowdfundingAddress,
+              functionName: "getProposal",
+              args: [BigInt(i)],
+            })
+          );
+        }
+
+        const proposalResults = await Promise.all(proposalPromises);
+        const transformedProposals = proposalResults.map(transformProposalData);
+        setProposals(transformedProposals);
+      } catch (error) {
+        console.error("Error fetching proposals:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProposals();
+  }, [config]);
+
+  // Transform blockchain response to ProposalProps
+  const transformProposalData = (data: any): ProposalProps => {
+    let status: 'active' | 'approved' | 'rejected' | 'pending';
+    
+    if (data.executed) {
+      status = 'approved';
+    } else if (!data.active) {
+      status = 'rejected';
+    } else {
+      const now = Math.floor(Date.now() / 1000);
+      if (Number(data.deadline) < now) {
+        status = Number(data.votesFor) > Number(data.votesAgainst) ? 'approved' : 'rejected';
+      } else {
+        status = 'active';
+      }
+    }
+    
+    return {
+      id: data.id,
+      proposer: data.proposer,
+      title: data.title,
+      description: data.description,
+      goal: data.goal,
+      startTime: data.startTime,
+      deadline: data.deadline,
+      votesFor: data.votesFor,
+      votesAgainst: data.votesAgainst,
+      executed: data.executed,
+      active: data.active,
+      commentCount: 0, 
+      status,
+    };
+  };
+
+  if (loading) {
+    return (
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Community Proposals</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-[350px] w-full rounded-xl" />
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+    );
+  }
 
-      {filteredProposals.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProposals.map((proposal) => (
-            <ProposalCard key={proposal.id} {...proposal} />
+  if (proposals.length === 0) {
+    return (
+      <section className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold mb-8 text-center">Community Proposals</h1>
+          <div className="text-center py-20">
+            <h3 className="text-xl font-medium mb-2">No proposals found</h3>
+            <p className="text-muted-foreground">Be the first to create a proposal for the community!</p>
+            <Button className="gap-5 m-10" onClick={() => setIsDialogOpen(true)}>
+              New Proposal
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">Community Proposals</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {proposals.map((proposal) => (
+            <ProposalCard
+              key={Number(proposal.id)}
+              {...proposal}
+            />
           ))}
         </div>
-      ) : (
-        <div className="text-center py-10 border border-dashed rounded-lg">
-          <p className="text-muted-foreground">No proposals found matching your criteria.</p>
-        </div>
-      )}
-    </div>
+      </div>
+    </section>
   );
 };
 
-export default ProposalsList;
+export default ViewProposals;

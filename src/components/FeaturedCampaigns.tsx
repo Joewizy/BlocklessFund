@@ -53,7 +53,7 @@ const FeaturedCampaigns = () => {
           </Button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {campaigns.map((campaign) => (
             <CampaignCard
               key={campaign.id}
@@ -67,7 +67,7 @@ const FeaturedCampaigns = () => {
               category={campaign.category}
             />
           ))}
-        </div>
+        </div> */}
         
         <div className="text-center mt-12">
           <Button className="bg-fundngn-green text-white hover:bg-fundngn-darkgreen px-6 py-6 h-auto text-lg">

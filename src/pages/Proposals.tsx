@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Plus } from 'lucide-react';
 import ProposalsList from '@/components/ProposalsList';
 import CreateProposalForm from '@/components/CreateProposalForm';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import ViewProposals from '@/components/ProposalsList';
 
 const Proposals = () => {
   const [activeTab, setActiveTab] = useState("browse");
@@ -42,7 +42,8 @@ const Proposals = () => {
         </TabsList>
 
         <TabsContent value="browse" className="space-y-8">
-          <ProposalsList />
+          {/* Renders when user selects "Browse Proposals" */}
+          <ViewProposals setIsDialogOpen={setIsDialogOpen} />
         </TabsContent>
 
         <TabsContent value="my-votes">

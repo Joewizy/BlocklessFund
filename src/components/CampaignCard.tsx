@@ -1,30 +1,13 @@
-
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
+import { CampaignCardProps } from '@/utils/interfaces';
 
-interface CampaignCardProps {
-  title: string;
-  description: string;
-  imageUrl: string;
-  creator: string;
-  raisedAmount: number;
-  goalAmount: number;
-  daysLeft: number;
-  category: string;
-}
+const CampaignCard = ({ title, description, imageUrl, creator, raisedAmount, goalAmount, daysLeft, category}: CampaignCardProps) => {
+  const numericGoal = Number(goalAmount) / 100;
+  const numericRaised = Number(raisedAmount) / 100;
+  const progressPercentage = Math.min((numericRaised / numericGoal) * 100, 100);
+  const formattedCreator = `${creator.slice(0, 6)}...${creator.slice(-4)}`;
 
-const CampaignCard = ({ 
-  title, 
-  description, 
-  imageUrl, 
-  creator, 
-  raisedAmount, 
-  goalAmount, 
-  daysLeft,
-  category
-}: CampaignCardProps) => {
-  const progressPercentage = (raisedAmount / goalAmount) * 100;
-  
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col card-hover">
       <div className="relative h-48 overflow-hidden">
@@ -32,6 +15,9 @@ const CampaignCard = ({
           src={imageUrl} 
           alt={title} 
           className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/default-campaign.jpg';
+          }}
         />
         <div className="absolute top-3 left-3">
           <span className="bg-fundngn-green/90 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
@@ -46,8 +32,12 @@ const CampaignCard = ({
         
         <div className="mt-auto">
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-semibold">{raisedAmount.toLocaleString()} cNGN</span>
-            <span className="text-gray-600">of {goalAmount.toLocaleString()} cNGN</span>
+            <span className="font-semibold">
+              {numericRaised.toLocaleString('en-US')} cNGN
+            </span>
+            <span className="text-gray-600">
+              of {numericGoal.toLocaleString('en-US')} cNGN
+            </span>
           </div>
           
           <Progress value={progressPercentage} className="h-2 mb-4" />
@@ -56,12 +46,12 @@ const CampaignCard = ({
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-full bg-fundngn-green/10 flex items-center justify-center mr-1">
                 <span className="text-xs font-semibold text-fundngn-green">
-                  {creator[0].toUpperCase()}
+                  {creator[0]?.toUpperCase() || '?'}
                 </span>
               </div>
-              <span>{creator}</span>
+              <span title={creator}>{formattedCreator}</span>
             </div>
-            <span>{daysLeft} days left</span>
+            <span>{daysLeft} day{daysLeft === 1 ? '' : 's'} left</span>
           </div>
         </div>
       </div>

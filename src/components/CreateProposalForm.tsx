@@ -4,47 +4,64 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { crowdfundingAbi, crowdfundingAddress } from '@/constants';
+import { useWriteContract, useConfig } from 'wagmi';
+import { waitForTransactionReceipt } from "@wagmi/core";
 
 const proposalSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters' }).max(100),
   description: z.string().min(20, { message: 'Description must be at least 20 characters' }),
-  votingDays: z.coerce.number().int().min(1).max(30),
+  amountGoal: z.coerce.number().int().min(1),
 });
 
 type ProposalFormValues = z.infer<typeof proposalSchema>;
 
 export default function CreateProposalForm() {
+      const config = useConfig();
+      const { data: hash, isPending, error, writeContractAsync } = useWriteContract();
+
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
     defaultValues: {
       title: '',
       description: '',
-      votingDays: 7,
+      amountGoal: null,
     },
   });
 
-  function onSubmit(data: ProposalFormValues) {
-    // In a real app, this would connect to your backend
-    console.log('Proposal submitted:', data);
-    
-    toast.success('Proposal created successfully!', {
-      description: 'Your proposal has been submitted for voting.',
-    });
-    
-    form.reset();
+    async function createProposal(title: string, description: string, amountGoal: number) {
+      try {
+          const response = await writeContractAsync({
+              abi: crowdfundingAbi,
+              address: crowdfundingAddress as `0x${string}`,
+              functionName: "createProposal",
+              args: [title, description, BigInt(amountGoal)]
+          });
+  
+          const approvalReceipt = await waitForTransactionReceipt(config, {
+              hash: response,
+          });
+          
+          console.log("Proposal created:", approvalReceipt);
+          toast.success("Proposal created Successfully");
+      } catch (error) {
+          console.error(error);
+          toast.error(`Could not create proposal: ${error.message}`);
+      }
+    }
+
+  async function onSubmit(data: ProposalFormValues) {
+    try {
+      await createProposal(data.title, data.description, data.amountGoal)
+      console.log("Proposal values", data)
+    } catch (error) {
+      console.error("Error submitting Form")
+    }
   }
 
   return (
@@ -95,15 +112,15 @@ export default function CreateProposalForm() {
         
         <FormField
           control={form.control}
-          name="votingDays"
+          name="amountGoal"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Voting Period (days)</FormLabel>
+              <FormLabel>Funding Goal</FormLabel>
               <FormControl>
-                <Input type="number" min={1} max={30} {...field} />
+                <Input type="number" min={1} {...field} />
               </FormControl>
               <FormDescription>
-                Set how long the community can vote on this proposal (1-30 days)
+                Set your goal amount for your campaign
               </FormDescription>
               <FormMessage />
             </FormItem>

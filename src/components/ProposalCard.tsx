@@ -1,38 +1,36 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Check, X, MessageSquare, Clock, ArrowUp, ArrowDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-export interface ProposalProps {
-  id: string;
-  title: string;
-  description: string;
-  creator: string;
-  createdAt: Date;
-  endDate: Date;
-  votesFor: number;
-  votesAgainst: number;
-  status: 'active' | 'approved' | 'rejected' | 'pending';
-  commentCount: number;
-}
+import { ProposalProps } from '@/utils/interfaces';
 
 const ProposalCard: React.FC<ProposalProps> = ({
   id,
+  proposer,
   title,
   description,
-  creator,
-  createdAt,
-  endDate,
+  goal,
+  startTime,
+  deadline,
   votesFor,
   votesAgainst,
+  executed,
+  active,
+  commentCount,
   status,
-  commentCount
 }) => {
-  const totalVotes = votesFor + votesAgainst;
-  const forPercentage = totalVotes > 0 ? (votesFor / totalVotes) * 100 : 0;
+  const numericGoal = Number(goal); 
+  const numericVotesFor = Number(votesFor);
+  const numericVotesAgainst = Number(votesAgainst);
+  const totalVotes = numericVotesFor + numericVotesAgainst;
+  const forPercentage = totalVotes > 0 ? (numericVotesFor / totalVotes) * 100 : 0;
+
+  // Date conversions
+  const startDate = new Date(Number(startTime) * 1000);
+  const endDate = new Date(Number(deadline) * 1000);
+  const formattedProposer = `${proposer.slice(0, 6)}...${proposer.slice(-4)}`;
 
   const getStatusBadge = () => {
     switch (status) {
@@ -44,6 +42,8 @@ const ProposalCard: React.FC<ProposalProps> = ({
         return <Badge className="bg-red-500 hover:bg-red-600"><X className="h-3 w-3 mr-1" /> Rejected</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-500 hover:bg-yellow-600"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
+      default:
+        return <Badge>Unknown Status</Badge>;
     }
   };
 
@@ -58,8 +58,8 @@ const ProposalCard: React.FC<ProposalProps> = ({
     const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
     const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     
-    if (days > 0) return `${days} days left`;
-    return `${hours} hours left`;
+    if (days > 0) return `${days} day${days !== 1 ? 's' : ''} left`;
+    return `${hours} hour${hours !== 1 ? 's' : ''} left`;
   };
 
   return (
@@ -70,8 +70,10 @@ const ProposalCard: React.FC<ProposalProps> = ({
           {getStatusBadge()}
         </div>
         <CardDescription className="pt-1 flex items-center justify-between">
-          <span>Proposed by {creator}</span>
-          <span className="text-sm text-muted-foreground">{createdAt.toLocaleDateString()}</span>
+          <span title={proposer}>Proposed by {formattedProposer}</span>
+          <span className="text-sm text-muted-foreground">
+            Goal: {numericGoal.toLocaleString()} cNGN
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -79,8 +81,14 @@ const ProposalCard: React.FC<ProposalProps> = ({
         
         <div className="space-y-2">
           <div className="flex justify-between text-sm mb-1">
-            <span className="flex items-center"><ArrowUp className="h-4 w-4 mr-1 text-green-500" /> {votesFor} For</span>
-            <span className="flex items-center"><ArrowDown className="h-4 w-4 mr-1 text-red-500" /> {votesAgainst} Against</span>
+            <span className="flex items-center">
+              <ArrowUp className="h-4 w-4 mr-1 text-green-500" /> 
+              {numericVotesFor.toLocaleString()} For
+            </span>
+            <span className="flex items-center">
+              <ArrowDown className="h-4 w-4 mr-1 text-red-500" /> 
+              {numericVotesAgainst.toLocaleString()} Against
+            </span>
             <span>{timeRemaining()}</span>
           </div>
           <Progress value={forPercentage} className="h-2" />
