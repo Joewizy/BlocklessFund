@@ -41,5 +41,5 @@ To set up **BlocklessFund** locally:
     ```bash
     npm Install
 3. **Start the server locally**
-```bash
-npm run development
+    ```bash
+    npm run dev
