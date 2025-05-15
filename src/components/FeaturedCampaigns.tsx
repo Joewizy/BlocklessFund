@@ -7,7 +7,10 @@ import { CampaignCardMock } from '@/utils/interfaces';
 import { Link } from 'react-router-dom';
 
 const FeaturedCampaigns = () => {
-  // Sample campaign data
+  const weiToEther = (wei: bigint): string => {
+    const ether = wei / BigInt(10 ** 18); 
+    return ether.toString(); 
+  };
   const campaigns: CampaignCardMock[] = [
     {
       id: BigInt(1),
@@ -76,7 +79,7 @@ const FeaturedCampaigns = () => {
             description={campaign.description}
             imageUrl={campaign.imageUrl}
             creator={campaign.creator}
-            raisedAmount={campaign.raisedAmount}
+            raisedAmount={weiToEther(campaign.raisedAmount)}
             goalAmount={campaign.goalAmount}
             startTime={campaign.startTime}
             deadline={campaign.deadline}

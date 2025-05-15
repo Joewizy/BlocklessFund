@@ -83,3 +83,23 @@ export const transferCngn = async (
     throw error;
   }
 };
+
+export const mintCngn = async (
+  config: Config,
+  amount: number,
+  address: `0x${string}`
+) => {
+  try {
+    const tx = await writeContract(config, {
+      abi: cNGNAdbi,
+      address: cNGNAddress,
+      functionName: "mint",
+      args: [address, BigInt(amount)],
+    });
+    return tx;
+  } catch (error) {
+    toast.error("Mint failed.");
+    throw error;
+  }
+};
+

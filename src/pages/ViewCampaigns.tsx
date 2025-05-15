@@ -63,7 +63,7 @@ const ViewCampaigns = () => {
             (campaign as RawCampaignData).goal !== 0n &&
             (campaign as RawCampaignData).creator !== "0x0000000000000000000000000000000000000000"
         );
-
+        console.log("Valid campaigns", validCampaigns)
         const transformedCampaigns = validCampaigns.map((data, index) => 
           transformCampaignData(
             data as RawCampaignData,

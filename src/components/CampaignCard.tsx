@@ -49,6 +49,9 @@ const CampaignCard = ({
   const numericRaised = Number(raisedAmount) / 10 ** 18;
   const progressPercentage = Math.min((numericRaised / numericGoal) * 100, 100);
   const formattedCreator = `${creator.slice(0, 6)}...${creator.slice(-4)}`;
+  const isCampaignEnded = daysLeft <= 0;
+  const isGoalAchieved = numericRaised >= numericGoal;
+  const isCreator = currentUser?.toLowerCase() === creator.toLowerCase();
 
   useEffect(() => {
     if (isConfirmed) {
@@ -58,31 +61,31 @@ const CampaignCard = ({
     }
   }, [isConfirmed, isTxError]);
 
-const handleTransactionSuccess = async () => {
-  try {
-    const updatedData = await readContract(config, {
-      abi: crowdfundingAbi,
-      address: crowdfundingAddress,
-      functionName: "getCampaign",
-      args: [BigInt(id)],
-    }) as RawCampaignData; 
+  const handleTransactionSuccess = async () => {
+    try {
+      const updatedData = await readContract(config, {
+        abi: crowdfundingAbi,
+        address: crowdfundingAddress,
+        functionName: "getCampaign",
+        args: [BigInt(id)],
+      }) as RawCampaignData; 
 
-    const updatedCampaign = transformCampaignData(
-      updatedData,
-      BigInt(id),
-      imageUrl 
-    );
+      const updatedCampaign = transformCampaignData(
+        updatedData,
+        BigInt(id),
+        imageUrl 
+      );
 
-    onUpdate(updatedCampaign);
-    toast.success("Transaction confirmed!");
-  } catch (error) {
-    console.error("Failed to fetch updated campaign:", error);
-    toast.error("Failed to refresh campaign data");
-  }
-  setIsModalOpen(false);
-  setDonationAmount("");
-  setTxHash(null);
-};
+      onUpdate(updatedCampaign);
+      toast.success("Transaction confirmed!");
+    } catch (error) {
+      console.error("Failed to fetch updated campaign:", error);
+      toast.error("Failed to refresh campaign data");
+    }
+    setIsModalOpen(false);
+    setDonationAmount("");
+    setTxHash(null);
+  };
 
   const handleTransactionError = () => {
     toast.error("Transaction failed!");
@@ -208,13 +211,30 @@ const handleTransactionSuccess = async () => {
           </span>
         </div>
 
-        {/* Goal Reached badge */}
-        {numericRaised >= numericGoal && (
-          <div className="absolute top-3 right-3">
-            <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-              Goal Reached
+        {/* Status badges */}
+        {isCampaignEnded ? (
+          <div className="absolute top-3 right-3 flex gap-2">
+            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+              Ended
             </span>
+            {isGoalAchieved ? (
+              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                Successful
+              </span>
+            ) : (
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                Unsuccessful
+              </span>
+            )}
           </div>
+        ) : (
+          isGoalAchieved && (
+            <div className="absolute top-3 right-3">
+              <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                Goal Reached
+              </span>
+            </div>
+          )
         )}
       </div>
 
@@ -242,13 +262,13 @@ const handleTransactionSuccess = async () => {
               <span title={creator}>{formattedCreator}</span>
             </div>
             <span>
-              {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+              {isCampaignEnded ? "Campaign Ended" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
             </span>
           </div>
 
           {/* Action Button */}
           <div className="flex gap-2">
-            {!completed ? (
+            {!isCampaignEnded ? (
               <Button
                 onClick={handleDonateClick}
                 className="w-full bg-fundngn-green hover:bg-fundngn-green/90"
@@ -256,15 +276,17 @@ const handleTransactionSuccess = async () => {
               >
                 {isConfirming ? "Processing..." : "Donate"}
               </Button>
-            ) : currentUser === creator ? (
-              <Button
-                onClick={handleWithdraw}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-                disabled={isConfirming}
-              >
-                {isConfirming ? "Processing..." : "Withdraw Funds"}
-              </Button>
-            ) : null}
+            ) : (
+              isCreator && isGoalAchieved && (
+                <Button
+                  onClick={handleWithdraw}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  disabled={isConfirming}
+                >
+                  {isConfirming ? "Processing..." : "Withdraw Funds"}
+                </Button>
+              )
+            )}
           </div>
         </div>
       </div>

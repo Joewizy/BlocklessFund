@@ -4,7 +4,7 @@ export interface CampaignCardProps {
   title: string;
   description: string;
   goalAmount: bigint;
-  raisedAmount: bigint;
+  raisedAmount: string;
   startTime: bigint;
   deadline: bigint;
   completed: boolean;

@@ -8,6 +8,7 @@ import CreateCampaignPage from "./pages/Create-Campaign-Page";
 import Proposals from "./pages/Proposals";
 import ViewCampaigns from "./pages/ViewCampaigns";
 import { Providers } from "./providers";
+import MintPage from "./pages/MintPage";
 import Layout from "@/components/Layout"; 
 
 const App = () => (
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="create-campaign" element={<CreateCampaignPage />} />
             <Route path="proposal" element={<Proposals />} />
             <Route path="campaigns" element={<ViewCampaigns />} />
+            <Route path="mint" element={<MintPage />} />
           </Route>
 
           {/* Routes without layout (optional) */}

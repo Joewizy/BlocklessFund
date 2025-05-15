@@ -13,21 +13,20 @@ import { toast } from "sonner";
 import { useConfig, useWriteContract, useAccount } from "wagmi";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { useNavigate } from "react-router-dom";
-import { parseTokenAmount } from "@/utils/conversionUtils";
 import { hasWhitelist } from "@/utils/contracts/crowdfunding";
 
 const formSchema = z.object({
   title: z.string().min(5, {
     message: "Title must be at least 5 characters.",
   }),
-  description: z.string().min(30, {
-    message: "Description must be at least 30 characters.",
+  description: z.string().min(10, {
+    message: "Description must be at least 10 characters.",
   }),
   amountGoal: z.coerce.number().min(1, {
     message: "Goal must be at least greater than $1",
   }),
   duration: z.coerce.number().min(1, {
-    message: "Duration must be at least greater than 1 day",
+    message: "Duration must be at least a 1 day",
   }),
   category: z.enum(
     ["other", "science", "social", "tech", "environment", "education"] as const
@@ -59,13 +58,11 @@ export function CreateCampaignForm() {
     } 
 
     try {
-      const formattedAmount = parseTokenAmount(amountGoal, 18);
-  
       const response = await writeContractAsync({
         abi: crowdfundingAbi,
         address: crowdfundingAddress as `0x${string}`,
         functionName: "createCampaign",
-        args: [title, description, formattedAmount, BigInt(DaysToSeconds(duration))],
+        args: [title, description, amountGoal, BigInt(DaysToSeconds(duration))],
       });
   
       const approvalReceipt = await waitForTransactionReceipt(config, {

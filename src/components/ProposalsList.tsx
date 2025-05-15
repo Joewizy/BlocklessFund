@@ -111,7 +111,7 @@ const ViewProposals = ({ setIsDialogOpen }: ViewProposalsProps) => {
       </section>
     );
   }
-
+  
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8">
       <div className="container mx-auto">

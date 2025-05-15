@@ -52,13 +52,18 @@ export const transformCampaignData = (
   id: bigint,
   imageUrl: string
 ): CampaignCardProps => {
+  const weiToEther = (wei: bigint): string => {
+    const ether = wei / BigInt(10 ** 18); 
+    return ether.toString(); 
+  };
+
   return {
     id,
     creator: data.creator,
     title: data.title,
     description: data.description,
-    goalAmount: data.goal,
-    raisedAmount: data.amountRaised,
+    goalAmount: data.goal, 
+    raisedAmount: weiToEther(data.amountRaised), 
     startTime: data.startTime,
     deadline: data.deadline,
     completed: data.completed,

@@ -37,3 +37,10 @@ export function parseTokenAmount(amount: number | string, decimals: number = 18)
     const fullAmountStr = whole + paddedFraction;
     return BigInt(fullAmountStr);
 }
+
+export function toBigIntTokenAmount(amount: number | string, decimals: number = 18): bigint {
+    const [whole, fraction = ""] = amount.toString().split(".");
+    const paddedFraction = (fraction + "0".repeat(decimals)).slice(0, decimals); 
+    const fullAmountStr = whole + paddedFraction;
+    return BigInt(fullAmountStr);
+}
