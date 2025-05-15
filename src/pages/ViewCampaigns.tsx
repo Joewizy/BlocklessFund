@@ -6,11 +6,12 @@ import { CampaignCardProps } from "@/utils/interfaces";
 import { useEffect, useState } from "react";
 import { readContract } from "@wagmi/core";
 import { useConfig } from "wagmi";
-import { calculateDaysLeft } from "@/utils/conversionUtils";
-import { Button } from "@/components/ui/button";
+import { transformCampaignData } from "@/utils/transformers";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { RawCampaignData } from "@/utils/transformers";
 
-// Random campaign images for now
+// Random campaign images
 const CAMPAIGN_IMAGES = [
   "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
   "https://images.unsplash.com/photo-1553775927-a071d5a6a39a",
@@ -42,7 +43,6 @@ const ViewCampaigns = () => {
           return;
         }
 
-        // Create an array of promises to fetch each campaign
         const campaignPromises = [];
         for (let i = 1; i <= count; i++) {
           campaignPromises.push(
@@ -58,16 +58,20 @@ const ViewCampaigns = () => {
         const campaignResults = await Promise.all(campaignPromises);
         const validCampaigns = campaignResults.filter(
           (campaign) =>
-            campaign.title !== "" &&
-            campaign.description !== "" &&
-            campaign.goal !== 0 &&
-            campaign.creator !== "0x0000000000000000000000000000000000000000"
+            (campaign as RawCampaignData).title !== "" &&
+            (campaign as RawCampaignData).description !== "" &&
+            (campaign as RawCampaignData).goal !== 0n &&
+            (campaign as RawCampaignData).creator !== "0x0000000000000000000000000000000000000000"
         );
 
-        // Transform the campaign data
-        const transformedCampaigns = validCampaigns.map((data, index) =>
-          transformCampaignData(data, BigInt(index + 1))
+        const transformedCampaigns = validCampaigns.map((data, index) => 
+          transformCampaignData(
+            data as RawCampaignData,
+            BigInt(index + 1),
+            CAMPAIGN_IMAGES[Math.floor(Math.random() * CAMPAIGN_IMAGES.length)]
+          )
         );
+
         setCampaigns(transformedCampaigns);
       } catch (error) {
         console.error("Error fetching campaigns:", error);
@@ -78,29 +82,6 @@ const ViewCampaigns = () => {
 
     fetchCampaigns();
   }, [config]);
-
-  // Transform blockchain response to CampaignCardProps
-  const transformCampaignData = (data: any, id: bigint): CampaignCardProps => {
-    const daysLeft = calculateDaysLeft(Number(data.deadline));
-    const randomImage = CAMPAIGN_IMAGES[
-      Math.floor(Math.random() * CAMPAIGN_IMAGES.length)
-    ];
-
-    return {
-      id,
-      creator: data.creator,
-      title: data.title,
-      description: data.description,
-      goalAmount: data.goal,
-      raisedAmount: data.amountRaised,
-      startTime: data.startTime,
-      deadline: data.deadline,
-      completed: data.completed,
-      imageUrl: randomImage,
-      daysLeft,
-      category: data.category || "other",
-    };
-  };
 
   if (loading) {
     return (
@@ -148,14 +129,11 @@ const ViewCampaigns = () => {
             <CampaignCard
               key={Number(campaign.id)}
               {...campaign}
-              creator={campaign.creator}
-              title={campaign.title}
-              description={campaign.description}
-              goalAmount={campaign.goalAmount}
-              raisedAmount={campaign.raisedAmount}
-              daysLeft={campaign.daysLeft}
-              category={campaign.category}
-              imageUrl={campaign.imageUrl}
+              onUpdate={(updatedCampaign) => {
+                setCampaigns(prev => prev.map(c => 
+                  Number(c.id) === Number(updatedCampaign.id) ? updatedCampaign : c
+                ));
+              }}
             />
           ))}
         </div>

@@ -1,4 +1,6 @@
 import { ProposalProps } from '@/utils/interfaces';
+import { CampaignCardProps } from '@/utils/interfaces';
+import { calculateDaysLeft } from './conversionUtils';
 
 export const transformProposalData = (data: any): ProposalProps => {
   let status: 'active' | 'approved' | 'rejected' | 'pending';
@@ -30,5 +32,38 @@ export const transformProposalData = (data: any): ProposalProps => {
     active: data.active,
     commentCount: 0, // Or fetch if available
     status,
+  };
+};
+
+export interface RawCampaignData {
+  creator: string;
+  title: string;
+  description: string;
+  goal: bigint;
+  amountRaised: bigint;
+  startTime: bigint;
+  deadline: bigint;
+  completed: boolean;
+  category: string;
+}
+
+export const transformCampaignData = (
+  data: RawCampaignData,
+  id: bigint,
+  imageUrl: string
+): CampaignCardProps => {
+  return {
+    id,
+    creator: data.creator,
+    title: data.title,
+    description: data.description,
+    goalAmount: data.goal,
+    raisedAmount: data.amountRaised,
+    startTime: data.startTime,
+    deadline: data.deadline,
+    completed: data.completed,
+    imageUrl,
+    daysLeft: calculateDaysLeft(Number(data.deadline)),
+    category: data.category || 'other',
   };
 };
