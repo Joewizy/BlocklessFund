@@ -8,7 +8,7 @@ const Footer = () => {
           {/* Logo and description */}
           <div className="max-w-xs">
             <h3 className="font-sans font-bold text-xl mb-3">
-              Blockless<span className="text-fundngn-gold">Fund</span>
+              Blockless<span className="text-fundngn-green">Fund</span>
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               Decentralized crowdfunding with cNGN on Base. Supporting innovation through community-powered funding.

@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
-import { Image } from "lucide-react"
 
 const Hero = () => {
   return (
@@ -14,7 +13,7 @@ const Hero = () => {
               <span className="text-fundngn-green">Base</span>.
             </h1>
             <p className="text-xl text-gray-600 max-w-lg">
-              Support projects, build communities, and shape the future of Nigeria.
+              Support projects, build communities, and shape the future of Africa.
             </p>
             <div className="flex flex-wrap gap-3 pt-2">
               <Button className="bg-fundngn-green text-white hover:bg-fundngn-darkgreen px-5 py-2 h-auto" asChild>
@@ -42,12 +41,12 @@ const Hero = () => {
               <div className="flex -space-x-3">
                 {[1, 2, 3, 4, 5].map((user) => (
                   <div key={user} className="h-8 w-8 rounded-full border-2 border-white overflow-hidden">
-                    <Image
-                      src={`/placeholder.svg?height=32&width=32&text=User${user}`}
+                    <img
+                      src={`https://i.pravatar.cc/32?img=${user}`}
                       alt={`User ${user}`}
                       width={32}
                       height={32}
-                      className="bg-fundngn-lightgreen"
+                      className="rounded-full bg-fundngn-lightgreen"
                     />
                   </div>
                 ))}

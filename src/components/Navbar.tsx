@@ -12,37 +12,15 @@ const Navbar = () => {
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <a href="/" className="flex items-center">
-            <span className="text-fundngn-green font-sans font-bold text-xl tracking-tight">
-              Blockless<span className="text-fundngn-gold">Fund</span>
+            <span className="text-black font-sans font-bold text-xl tracking-tight">
+              Blockless<span className="text-fundngn-green">Fund</span>
             </span>
           </a>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-10">
-          <a
-            href="#"
-            className="text-gray-700 hover:text-fundngn-green font-medium text-sm tracking-wide transition duration-200"
-          >
-            Explore
-          </a>
-          <a
-            href="#"
-            className="text-gray-700 hover:text-fundngn-green font-medium text-sm tracking-wide transition duration-200"
-          >
-            Learn
-          </a>
-          <a
-            href="#"
-            className="text-gray-700 hover:text-fundngn-green font-medium text-sm tracking-wide transition duration-200"
-          >
-            About
-          </a>
-        </nav>
-
         <div className="hidden md:flex items-center">
           {/* RainbowKit ConnectButton */}
-          <ConnectButton />
+          <ConnectButton showBalance={false} />
         </div>
 
         {/* Mobile Navigation */}
