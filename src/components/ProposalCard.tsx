@@ -11,6 +11,10 @@ import { transformProposalData } from "@/utils/transformers";
 import { useConfig } from "wagmi";
 import { voteOnProposal } from "@/utils/contracts/crowdfunding";
 import { useWaitForTransactionReceipt } from "wagmi";
+import { toast } from "sonner";
+import { checkCngnBalance } from "@/utils/contracts/cNGN";
+import { useAccount } from "wagmi";
+import { hasVoted } from "@/utils/contracts/crowdfunding";
 
 interface ProposalCardProps extends ProposalProps {
   onUpdate: (updatedProposal: ProposalProps) => void;
@@ -32,9 +36,10 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   status,
   onUpdate,
 }) => {
+  const account = useAccount();
   const config = useConfig();
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
-  const { data: txReceipt, isLoading: isWaiting } = useWaitForTransactionReceipt({ hash: txHash });
+  const { data: txReceipt, isLoading: isWaiting, isSuccess, isError } = useWaitForTransactionReceipt({ hash: txHash });
 
   const numericGoal = Number(goal);
   const numericVotesFor = Number(votesFor);
@@ -47,25 +52,52 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   const endDate = new Date(Number(deadline) * 1000);
   const formattedProposer = `${proposer.slice(0, 6)}...${proposer.slice(-4)}`;
 
-  // Update proposal when transaction is successful
   useEffect(() => {
-    if (txReceipt && txReceipt.status === 1) {
+    if (isSuccess) {
+      console.log(`Transaction confirmed for proposal ${id}, fetching updated data`);
+      toast.success("Vote submitted!");
       const fetchUpdatedProposal = async () => {
         try {
           const updatedProposalData = await getProposalById(config, Number(id));
           const updatedProposal = transformProposalData(updatedProposalData);
           onUpdate(updatedProposal);
-          setTxHash(null); // Reset transaction hash
+          setTxHash(null);
         } catch (err) {
           console.error("Failed to fetch updated proposal", err);
         }
       };
       fetchUpdatedProposal();
-    } else if (txReceipt && txReceipt.status === 0) {
-      console.error("Transaction failed");
-      setTxHash(null); // Reset on failure
+    } else if (isError) {
+      console.error(`Transaction failed for proposal ${id}`);
+      toast.error("Vote failed!");
+      setTxHash(null);
     }
-  }, [txReceipt, config, id, onUpdate]);
+  }, [isSuccess, isError, config, id, onUpdate]);
+  
+  async function handleVote(vote: boolean) {
+    const voted = await hasVoted(config, Number(id), account.address)
+    const balance = await checkCngnBalance(config, account.address)
+    console.log("user balance:", balance)
+    console.log(`${account.address} has voted =${voted}`)
+    if (voted) {
+      toast.warning("You have already voted for this proposal")
+      return
+    }
+    
+    if (Number(balance) == 0) {
+      toast.warning("You have no cNGN tokens please fund wallet");
+      return
+    }
+    
+    try {
+      console.log(`Voting on proposal ${id} with vote: ${vote}`);
+      const result = await voteOnProposal(config, Number(id), vote);
+      console.log("Transaction hash set:", result);
+      setTxHash(result);
+    } catch (err) {
+      console.error("Voting failed", err);
+    }
+  }
 
   const getStatusBadge = () => {
     switch (status) {
@@ -132,15 +164,6 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
       )}
     </div>
   );
-
-  async function handleVote(vote: boolean) {
-    try {
-      const result = await voteOnProposal(config, Number(id), vote);
-      setTxHash(result);
-    } catch (err) {
-      console.error("Voting failed", err);
-    }
-  }
 
   return (
     <Card className="w-full overflow-hidden border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all duration-300">

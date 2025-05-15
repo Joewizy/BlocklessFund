@@ -68,9 +68,16 @@ const ViewProposals = ({ setIsDialogOpen }: ViewProposalsProps) => {
   }, [config]);
 
   const updateProposal = (updatedProposal: ProposalProps) => {
-    setProposals((prevProposals) =>
-      prevProposals.map((p) => (p.id === updatedProposal.id ? updatedProposal : p))
-    );
+    setProposals((prevProposals) => {
+      console.log("Updating proposal with ID:", updatedProposal.id);
+      console.log("Previous proposals:", prevProposals);
+      const newProposals = prevProposals.map((p) => {
+        console.log(`Comparing p.id (${p.id}, type: ${typeof p.id}) with updatedProposal.id (${updatedProposal.id}, type: ${typeof updatedProposal.id})`);
+        return String(p.id) === String(updatedProposal.id) ? updatedProposal : p;
+      });
+      console.log("New proposals state:", newProposals);
+      return newProposals;
+    });
   };
 
   if (loading) {

@@ -17,7 +17,7 @@ export const voteOnProposal = async (
         functionName: "voteOnProposal",
         args: [BigInt(proposalId), vote],
       });
-      toast.success("Vote submitted!");
+      //toast.success("Vote submitted!");
       console.log("Vote proposal tx:", tx);
       return tx;
     } catch (error) {
@@ -197,5 +197,25 @@ export const getProposalCounts = async (config: Config) => {
       args: [BigInt(proposalId), voter],
     });
   };
+
+  export const hasWhitelist = async (
+    config: Config,
+    user: `0x${string}`
+  ): Promise<boolean> => {
+    try {
+      const isWhitelisted = await readContract(config, {
+        abi: crowdfundingAbi,
+        address: crowdfundingAddress,
+        functionName: "whitelisted",
+        args: [user],
+      });
+  
+      return isWhitelisted as boolean;
+    } catch (error) {
+      toast.error("Failed to check whitelist status.");
+      throw error;
+    }
+  };
+  
   
   

@@ -10,10 +10,11 @@ import {Select, SelectContent, SelectItem, SelectTrigger,SelectValue,} from "@/c
 import { crowdfundingAbi, crowdfundingAddress } from "@/constants";
 import { DaysToSeconds } from "@/utils/conversionUtils";
 import { toast } from "sonner";
-import { useConfig, useWriteContract } from "wagmi";
+import { useConfig, useWriteContract, useAccount } from "wagmi";
 import { waitForTransactionReceipt } from "@wagmi/core";
 import { useNavigate } from "react-router-dom";
 import { parseTokenAmount } from "@/utils/conversionUtils";
+import { hasWhitelist } from "@/utils/contracts/crowdfunding";
 
 const formSchema = z.object({
   title: z.string().min(5, {
@@ -34,9 +35,10 @@ const formSchema = z.object({
 });
 
 export function CreateCampaignForm() {
+  const account = useAccount();
   const navigate = useNavigate();
-    const config = useConfig();
-    const { data: hash, isPending, error, writeContractAsync } = useWriteContract();
+  const config = useConfig();
+  const { data: hash, isPending, error, writeContractAsync } = useWriteContract();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,6 +52,12 @@ export function CreateCampaignForm() {
   });
 
   async function createCampaign(title: string, description: string, amountGoal: number, duration: number) {
+    const whitelisted = await hasWhitelist(config, account.address);
+    if (!whitelisted) {
+      toast.warning("Only eligible users can create campaign try creating a proposal!")
+      return
+    } 
+
     try {
       const formattedAmount = parseTokenAmount(amountGoal, 18);
   
