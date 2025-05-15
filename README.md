@@ -1,74 +1,45 @@
-# Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/c6ad6905-aee6-4f55-a932-1cda8bcdaa8d
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/c6ad6905-aee6-4f55-a932-1cda8bcdaa8d) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c6ad6905-aee6-4f55-a932-1cda8bcdaa8d) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
 # BlocklessFund
+
+**BlocklessFund** is a decentralized crowdfunding platform built on **Base**, a layer-2 scaling solution for Ethereum. It aims to revolutionize fundraising by making it faster, more transparent, and accessible—particularly in regions like Nigeria, where trust in intermediaries is low. 
+
+By leveraging blockchain technology, BlocklessFund removes middlemen, allowing anyone to propose campaigns while ensuring only impactful projects are funded through community governance.
+
+---
+
+## 🌟 Key Features
+
+- **Transparency**: All transactions are recorded on the blockchain and verifiable by anyone.
+- **Speed**: Base’s layer-2 technology ensures near-instant fund transfers.
+- **Low Costs**: Significantly reduced fees compared to traditional crowdfunding platforms.
+- **Accessibility**: Open to anyone with an internet connection, broadening participation.
+- **Trust**: Dual governance model:
+  - **Whitelisted Creators**: Trusted entities can launch campaigns directly.
+  - **Community Voting**: Token holders vote on other proposals to ensure project quality.
+
+---
+
+## 🛠️ Technologies Used
+
+- **Solidity**: Smart contracts for secure, decentralized logic.
+- **Base**: Layer-2 Ethereum network for fast, affordable transactions.
+- **React**: Dynamic frontend interface.
+- **Next.js**: Framework for structuring the web app.
+- **TypeScript**: Type-safe JavaScript development.
+- **Tailwind CSS**: Stylish, responsive design.
+- **wagmi**: Seamless blockchain integration in the React dApp.
+
+---
+
+## 🚀 Getting Started
+
+To set up **BlocklessFund** locally:
+
+1. **Clone the project**
+   ```bash
+   git clone https://github.com/your-repo/blocklessfund.git
+2. **Install dependencies**
+    ```bash
+    npm Install
+3. **Start the server locally**
+```bash
+npm run development
