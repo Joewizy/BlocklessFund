@@ -10,9 +10,15 @@ import { calculateDaysLeft } from "@/utils/conversionUtils";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
-// Default campaign image
-const DEFAULT_IMAGE = "https://images.unsplash.com/photo-1605810230434-7631ac76ec81";
-const PECTRA_IMAGE = "https://images.unsplash.com/photo-1553775927-a071d5a6a39a?q=80&w=2774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+// Random campaign images for now
+const CAMPAIGN_IMAGES = [
+  "https://images.unsplash.com/photo-1605810230434-7631ac76ec81",
+  "https://images.unsplash.com/photo-1553775927-a071d5a6a39a",
+  "https://images.unsplash.com/photo-1627552245715-77d79bbf6fe2",
+  "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca",
+  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
+  "https://images.unsplash.com/photo-1553775927-a071d5a6a39a?q=80&w=2774&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+];
 
 const ViewCampaigns = () => {
   const config = useConfig();
@@ -76,6 +82,9 @@ const ViewCampaigns = () => {
   // Transform blockchain response to CampaignCardProps
   const transformCampaignData = (data: any, id: bigint): CampaignCardProps => {
     const daysLeft = calculateDaysLeft(Number(data.deadline));
+    const randomImage = CAMPAIGN_IMAGES[
+      Math.floor(Math.random() * CAMPAIGN_IMAGES.length)
+    ];
 
     return {
       id,
@@ -87,7 +96,7 @@ const ViewCampaigns = () => {
       startTime: data.startTime,
       deadline: data.deadline,
       completed: data.completed,
-      imageUrl: PECTRA_IMAGE,
+      imageUrl: randomImage,
       daysLeft,
       category: data.category || "other",
     };

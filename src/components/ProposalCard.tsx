@@ -77,8 +77,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   async function handleVote(vote: boolean) {
     const voted = await hasVoted(config, Number(id), account.address)
     const balance = await checkCngnBalance(config, account.address)
-    console.log("user balance:", balance)
-    console.log(`${account.address} has voted =${voted}`)
+
     if (voted) {
       toast.warning("You have already voted for this proposal")
       return

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAccount, useConfig, useWriteContract } from "wagmi";
 import { toast } from "sonner";
 import { waitForTransactionReceipt, readContract } from "@wagmi/core";
+import { formatUnits } from "viem";
 
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { Input } from "@/components/ui/input";
 
 import type { CampaignCardProps } from "@/utils/interfaces";
 import { parseTokenAmount } from "@/utils/conversionUtils";
+import { checkCngnBalance } from "@/utils/contracts/cNGN";
 import { crowdfundingAbi, crowdfundingAddress, cNGNAdbi, cNGNAddress } from "@/constants";
 
 const CampaignCard = ({
@@ -36,18 +38,46 @@ const CampaignCard = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [donationAmount, setDonationAmount] = useState("");
+  const [userBalance, setUserBalance] = useState<bigint | null>(null);
 
   const numericGoal = Number(goalAmount);
   const numericRaised = Number(raisedAmount) / 10 ** 18;
   const progressPercentage = Math.min((numericRaised / numericGoal) * 100, 100);
   const formattedCreator = `${creator.slice(0, 6)}...${creator.slice(-4)}`;
 
-  const handleDonateClick = () => setIsModalOpen(true);
+  const handleDonateClick = async () => {
+    if (!currentUser) {
+      toast.warning("Please connect your wallet.");
+      return;
+    }
+
+    try {
+      const balance = await checkCngnBalance(config, currentUser);
+      setUserBalance(balance);
+
+      if (balance === 0n) {
+        toast.warning("You cannot donate — you have 0 cNGN.");
+        return;
+      }
+
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("Failed to fetch token balance:", err);
+      toast.error("Could not check token balance.");
+    }
+  };
 
   const handleDonateConfirm = async () => {
     const amount = parseFloat(donationAmount);
     if (isNaN(amount) || amount <= 0) {
       toast.error("Please enter a valid donation amount.");
+      return;
+    }
+
+    const formattedAmount = parseTokenAmount(amount, 18);
+
+    if (userBalance !== null && formattedAmount > userBalance) {
+      toast.error("Insufficient cNGN balance for this donation.");
       return;
     }
 
@@ -206,6 +236,19 @@ const CampaignCard = ({
           <DialogHeader>
             <DialogTitle>Donate to {title}</DialogTitle>
           </DialogHeader>
+
+          {currentUser && (
+            <div className="text-sm text-gray-500 mb-2 break-all">
+              Address: {currentUser}
+            </div>
+          )}
+
+          {userBalance !== null && (
+            <p className="text-sm text-gray-500 mb-4">
+              Your balance: <strong>{formatUnits(userBalance, 18)} cNGN</strong>
+            </p>
+          )}
+
           <div className="space-y-4">
             <Input
               type="number"
