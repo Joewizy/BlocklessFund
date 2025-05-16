@@ -19,7 +19,7 @@ export const transformProposalData = (data: any): ProposalProps => {
   }
 
   return {
-    id: data.id.toString(), // Convert BigInt to string
+    id: data.id.toString(), 
     proposer: data.proposer,
     title: data.title,
     description: data.description,
@@ -30,7 +30,7 @@ export const transformProposalData = (data: any): ProposalProps => {
     votesAgainst: data.votesAgainst.toString(),
     executed: data.executed,
     active: data.active,
-    commentCount: 0, // Or fetch if available
+    commentCount: 0, 
     status,
   };
 };

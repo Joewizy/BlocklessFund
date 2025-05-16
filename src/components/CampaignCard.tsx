@@ -41,16 +41,15 @@ const CampaignCard = ({
   const [userBalance, setUserBalance] = useState<bigint | null>(null);
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError } = useWaitForTransactionReceipt({ 
+  const { isLoading: isConfirming, isSuccess: isConfirmed, isError: isTxError } = useWaitForTransactionReceipt({
     hash: txHash,
   });
 
   const numericGoal = Number(goalAmount);
-  const numericRaised = Number(raisedAmount) / 10 ** 18;
+  const numericRaised = Number(raisedAmount);
   const progressPercentage = Math.min((numericRaised / numericGoal) * 100, 100);
   const formattedCreator = `${creator.slice(0, 6)}...${creator.slice(-4)}`;
   const isCampaignEnded = daysLeft <= 0;
-  const isGoalAchieved = numericRaised >= numericGoal;
   const isCreator = currentUser?.toLowerCase() === creator.toLowerCase();
 
   useEffect(() => {
@@ -68,20 +67,16 @@ const CampaignCard = ({
         address: crowdfundingAddress,
         functionName: "getCampaign",
         args: [BigInt(id)],
-      }) as RawCampaignData; 
+      }) as RawCampaignData;
 
-      const updatedCampaign = transformCampaignData(
-        updatedData,
-        BigInt(id),
-        imageUrl 
-      );
-
+      const updatedCampaign = transformCampaignData(updatedData, BigInt(id), imageUrl);
       onUpdate(updatedCampaign);
       toast.success("Transaction confirmed!");
     } catch (error) {
       console.error("Failed to fetch updated campaign:", error);
       toast.error("Failed to refresh campaign data");
     }
+
     setIsModalOpen(false);
     setDonationAmount("");
     setTxHash(null);
@@ -192,138 +187,106 @@ const CampaignCard = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col card-hover">
-      {/* Image Section */}
-      <div className="relative h-48 overflow-hidden">
+    <div className="relative bg-white rounded-xl border shadow-sm overflow-hidden flex flex-col group">
+
+      {/* Status Banner */}
+      {isCampaignEnded && (
+        <div className={`absolute top-0 left-0 w-full text-white text-xs text-center py-1 z-10 ${
+          completed
+            ? (numericRaised >= numericGoal ? "bg-emerald-600" : "bg-red-500") 
+            : (numericRaised >= numericGoal ? "bg-yellow-500" : "bg-red-500") 
+        }`}>
+          {completed
+            ? (numericRaised >= numericGoal
+                ? "🎉 Campaign Ended - Funded Successfully" 
+                : "⚠️ Campaign Ended - Funded but Goal Not Met") 
+            : (numericRaised >= numericGoal
+                ? "⌛ Campaign Ended - Awaiting Withdrawal"
+                : "⚠️ Campaign Ended - Goal Not Reached") 
+          }
+        </div>
+      )}
+
+      {/* Image */}
+      <div className="relative h-48 overflow-hidden grayscale-[20%] group-hover:grayscale-0 transition">
         <img
           src={imageUrl || "/placeholder.svg"}
           alt={title}
           className="w-full h-full object-cover"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = "/default-campaign.jpg";
-          }}
+          onError={(e) => ((e.target as HTMLImageElement).src = "/default-campaign.jpg")}
         />
-        
-        {/* Category badge */}
-        <div className="absolute top-3 left-3">
-          <span className="bg-fundngn-green/90 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-            {category}
-          </span>
-        </div>
-
-        {/* Status badges */}
-        {isCampaignEnded ? (
-          <div className="absolute top-3 right-3 flex gap-2">
-            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-              Ended
-            </span>
-            {isGoalAchieved ? (
-              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                Successful
-              </span>
-            ) : (
-              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                Unsuccessful
-              </span>
-            )}
-          </div>
-        ) : (
-          isGoalAchieved && (
-            <div className="absolute top-3 right-3">
-              <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                Goal Reached
-              </span>
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Content Section */}
-      <div className="p-5 flex flex-col flex-grow">
-        <h3 className="font-bold text-xl mb-2 line-clamp-2">{title}</h3>
-        <p className="text-gray-600 mb-4 text-sm line-clamp-2">{description}</p>
-
-        <div className="mt-auto">
-          {/* Funding Progress */}
-          <div className="flex justify-between text-sm mb-1">
-            <span className="font-semibold">{numericRaised.toLocaleString("en-US")} cNGN</span>
-            <span className="text-gray-600">of {numericGoal.toLocaleString("en-US")} cNGN</span>
-          </div>
-          <Progress value={progressPercentage} className="h-2 mb-3" />
-
-          {/* Creator and Time Left */}
-          <div className="flex justify-between text-sm text-gray-600 mb-4">
-            <div className="flex items-center">
-              <div className="w-6 h-6 rounded-full bg-fundngn-green/10 flex items-center justify-center mr-1">
-                <span className="text-xs font-semibold text-fundngn-green">
-                  {creator[0]?.toUpperCase() || "?"}
-                </span>
-              </div>
-              <span title={creator}>{formattedCreator}</span>
-            </div>
-            <span>
-              {isCampaignEnded ? "Campaign Ended" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`}
-            </span>
-          </div>
-
-          {/* Action Button */}
-          <div className="flex gap-2">
-            {!isCampaignEnded ? (
-              <Button
-                onClick={handleDonateClick}
-                className="w-full bg-fundngn-green hover:bg-fundngn-green/90"
-                disabled={isConfirming}
-              >
-                {isConfirming ? "Processing..." : "Donate"}
-              </Button>
-            ) : (
-              isCreator && isGoalAchieved && (
-                <Button
-                  onClick={handleWithdraw}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  disabled={isConfirming}
-                >
-                  {isConfirming ? "Processing..." : "Withdraw Funds"}
-                </Button>
-              )
-            )}
-          </div>
+        <div className="absolute bottom-3 left-3 bg-white/80 text-gray-800 text-xs px-2 py-1 rounded shadow-sm">
+          {category}
         </div>
       </div>
 
-      {/* Donation Dialog */}
+      {/* Progress and Metrics */}
+      <div className="p-4 border-b">
+        <div className="flex justify-between text-sm mb-1">
+          <span className="font-semibold text-fundngn-green">{numericRaised.toLocaleString()} cNGN</span>
+          <span className="text-gray-500">of {numericGoal.toLocaleString()} cNGN</span>
+        </div>
+        <Progress value={progressPercentage} className="h-2" />
+      </div>
+
+      {/* Title and Description */}
+      <div className="p-4 flex flex-col flex-grow">
+        <h3 className="text-lg font-semibold mb-1 line-clamp-2">{title}</h3>
+        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{description}</p>
+      </div>
+
+      {/* Creator Info */}
+      <div className="px-4 pb-4 text-sm text-gray-500 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-fundngn-green/10 flex items-center justify-center text-xs font-bold text-fundngn-green">
+            {creator[0]?.toUpperCase() || "?"}
+          </div>
+          <span title={creator}>{formattedCreator}</span>
+        </div>
+        <span className="text-xs">
+          {isCampaignEnded ? "Ended" : `${daysLeft} days left`}
+        </span>
+      </div>
+
+      {/* CTA Button */}
+      {isCampaignEnded ? (
+        isCreator && numericRaised >= numericGoal && !completed && (
+          <Button
+            onClick={handleWithdraw}
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            disabled={isConfirming}
+          >
+            {isConfirming ? "Processing..." : "Withdraw Funds"}
+          </Button>
+        )
+      ) : (
+        <Button
+          onClick={handleDonateClick}
+          className="w-full bg-fundngn-green hover:bg-fundngn-green/90"
+          disabled={isConfirming}
+        >
+          {isConfirming ? "Processing..." : "Donate"}
+        </Button>
+      )}
+
+      {/* Donation Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Donate to {title}</DialogTitle>
           </DialogHeader>
-
-          {currentUser && (
-            <div className="text-sm text-gray-500 mb-2 break-all">
-              Address: {currentUser}
-            </div>
-          )}
-
-          {userBalance !== null && (
-            <p className="text-sm text-gray-500 mb-4">
-              Your balance: <strong>{formatUnits(userBalance, 18)} cNGN</strong>
-            </p>
-          )}
-
-          <div className="space-y-4">
-            <Input
-              type="number"
-              placeholder="Amount in cNGN"
-              value={donationAmount}
-              onChange={(e) => setDonationAmount(e.target.value)}
-              min="0"
-              step="0.01"
-            />
-            <Button 
-              onClick={handleDonateConfirm}
-              disabled={isConfirming}
-            >
-              {isConfirming ? "Processing..." : "Confirm Donation"}
+          <Input
+            placeholder="Enter donation amount"
+            value={donationAmount}
+            onChange={(e) => setDonationAmount(e.target.value)}
+            className="mb-4"
+          />
+          <div className="flex justify-between">
+            <Button onClick={handleDonateConfirm} className="w-full">
+              Confirm Donation
+            </Button>
+            <Button onClick={() => setIsModalOpen(false)} variant="secondary" className="w-full">
+              Cancel
             </Button>
           </div>
         </DialogContent>
