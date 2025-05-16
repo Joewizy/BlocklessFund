@@ -34,6 +34,7 @@ const MintForm = () => {
   useEffect(() => {
     if (isSuccess) {
       toast.success(`Successfully minted ${amount} cNGN token`);
+      fetchBalance();
     }
   }, [isSuccess, amount]);
 
@@ -56,12 +57,14 @@ const MintForm = () => {
 
   // Handle slider change
   const handleSliderChange = (value: number[]) => {
-    setAmount(value[0]);
+    const newAmount = Math.min(value[0], 10000); 
+    setAmount(newAmount);
   };
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newAmount = parseFloat(e.target.value);
+    let newAmount = parseFloat(e.target.value);
+    newAmount = Math.min(newAmount, 10000);
     if (!isNaN(newAmount)) {
       setAmount(newAmount);
     }
@@ -136,7 +139,7 @@ const MintForm = () => {
 
       <div className="flex items-center justify-between px-2 py-3 mt-4 text-xs text-gray-500 bg-green-50/50 rounded-lg">
         <span>Estimated Gas Fee:</span>
-        <span className="font-medium text-gray-700">0.0042 ETH</span>
+        <span className="font-medium text-gray-700">0.0000001 ETH</span>
       </div>
     </div>
   );
