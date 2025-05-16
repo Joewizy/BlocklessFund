@@ -190,22 +190,28 @@ const CampaignCard = ({
     <div className="relative bg-white rounded-xl border shadow-sm overflow-hidden flex flex-col group">
 
       {/* Status Banner */}
-      {isCampaignEnded && (
-        <div className={`absolute top-0 left-0 w-full text-white text-xs text-center py-1 z-10 ${
-          completed
-            ? (numericRaised >= numericGoal ? "bg-emerald-600" : "bg-red-500") 
-            : (numericRaised >= numericGoal ? "bg-yellow-500" : "bg-red-500") 
-        }`}>
-          {completed
+      {(numericRaised >= numericGoal || isCampaignEnded) && (
+      <div className={`absolute top-0 left-0 w-full text-white text-xs text-center py-1 z-10 ${
+        isCampaignEnded
+          ? completed
+            ? (numericRaised >= numericGoal ? "bg-emerald-600" : "bg-red-500")
+            : (numericRaised >= numericGoal ? "bg-yellow-500" : "bg-red-500")
+          : "bg-blue-600"
+      }`}>
+        {isCampaignEnded
+          ? completed
             ? (numericRaised >= numericGoal
-                ? "🎉 Campaign Ended - Funded Successfully" 
-                : "⚠️ Campaign Ended - Funded but Goal Not Met") 
+                ? "🎉 Campaign Ended - Funded Successfully"
+                : "⚠️ Campaign Ended - Funded but Goal Not Met")
             : (numericRaised >= numericGoal
                 ? "⌛ Campaign Ended - Awaiting Withdrawal"
-                : "⚠️ Campaign Ended - Goal Not Reached") 
-          }
-        </div>
-      )}
+                : "⚠️ Campaign Ended - Goal Not Reached")
+          : (numericRaised >= numericGoal && !isCampaignEnded
+              ? "🎯 Goal Reached"
+              : null)
+        }
+      </div>
+    )}
 
       {/* Image */}
       <div className="relative h-48 overflow-hidden grayscale-[20%] group-hover:grayscale-0 transition">

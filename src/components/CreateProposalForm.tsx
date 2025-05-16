@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { crowdfundingAbi, crowdfundingAddress } from '@/constants';
 import { useWriteContract, useConfig } from 'wagmi';
 import { waitForTransactionReceipt } from "@wagmi/core";
+import { useNavigate } from 'react-router-dom';
 
 const proposalSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters' }).max(100),
@@ -22,8 +23,9 @@ const proposalSchema = z.object({
 type ProposalFormValues = z.infer<typeof proposalSchema>;
 
 export default function CreateProposalForm() {
-      const config = useConfig();
-      const { data: hash, isPending, error, writeContractAsync } = useWriteContract();
+  const navigate = useNavigate();
+  const config = useConfig();
+  const { data: hash, isPending, isSuccess, writeContractAsync } = useWriteContract();
 
   const form = useForm<ProposalFormValues>({
     resolver: zodResolver(proposalSchema),
@@ -34,7 +36,18 @@ export default function CreateProposalForm() {
     },
   });
 
-    async function createProposal(title: string, description: string, amountGoal: number) {
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("Proposal created Successfully");
+      const timer = setTimeout(() => {
+        navigate("/proposals");
+      }, 2000); 
+  
+      return () => clearTimeout(timer); 
+    }
+  }, [isSuccess, navigate]);  
+
+  async function createProposal(title: string, description: string, amountGoal: number) {
       try {
           const response = await writeContractAsync({
               abi: crowdfundingAbi,
@@ -48,7 +61,6 @@ export default function CreateProposalForm() {
           });
           
           console.log("Proposal created:", approvalReceipt);
-          toast.success("Proposal created Successfully");
       } catch (error) {
           console.error(error);
           toast.error(`Could not create proposal: ${error.message}`);
