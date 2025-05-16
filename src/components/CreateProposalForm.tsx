@@ -40,7 +40,7 @@ export default function CreateProposalForm() {
     if (isSuccess) {
       toast.success("Proposal created Successfully");
       const timer = setTimeout(() => {
-        navigate("/proposals");
+        navigate("proposal");
       }, 2000); 
   
       return () => clearTimeout(timer); 
