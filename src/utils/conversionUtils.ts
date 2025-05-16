@@ -1,3 +1,4 @@
+
 export function secondsToDays(seconds: number): number {
     const secondsInDay = 86400; 
     return seconds / secondsInDay;
@@ -44,3 +45,17 @@ export function toBigIntTokenAmount(amount: number | string, decimals: number = 
     const fullAmountStr = whole + paddedFraction;
     return BigInt(fullAmountStr);
 }
+
+const PRECISION = 10n ** 18n; // 1e18, assuming 18 decimals for cNGN
+
+export const getVoteWeight = (balance: bigint): number => {
+  if (balance >= 10000n * PRECISION) {
+    return 10;
+  } else if (balance >= 1000n * PRECISION) {
+    return 5;
+  } else if (balance >= 1n * PRECISION) {
+    return 1;
+  } else {
+    return 0;
+  }
+};

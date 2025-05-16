@@ -189,15 +189,17 @@ export const getProposalCounts = async (config: Config) => {
     config: Config,
     proposalId: number,
     voter: `0x${string}`
-  ) => {
-    return await readContract(config, {
+  ): Promise<boolean> => {
+    const result = await readContract(config, {
       abi: crowdfundingAbi,
       address: crowdfundingAddress,
       functionName: "votes",
       args: [BigInt(proposalId), voter],
     });
+  
+    return result as boolean;
   };
-
+  
   export const hasWhitelist = async (
     config: Config,
     user: `0x${string}`

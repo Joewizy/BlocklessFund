@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, MessageSquare, Clock, ArrowUp, ArrowDown } from "lucide-react";
+import { Check, X, MessageSquare, Clock, ArrowUp, ArrowDown, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ProposalProps } from "@/utils/interfaces";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { checkCngnBalance } from "@/utils/contracts/cNGN";
 import { useAccount } from "wagmi";
 import { hasVoted } from "@/utils/contracts/crowdfunding";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ProposalCardProps extends ProposalProps {
   onUpdate: (updatedProposal: ProposalProps) => void;
@@ -40,6 +41,8 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   const config = useConfig();
   const [txHash, setTxHash] = useState<`0x${string}` | null>(null);
   const { data: txReceipt, isLoading: isWaiting, isSuccess, isError } = useWaitForTransactionReceipt({ hash: txHash });
+  const [userVoteWeight, setUserVoteWeight] = useState<number>(0);
+  const [userHasVoted, setUserHasVoted] = useState<boolean>(false);
 
   const numericGoal = Number(goal);
   const numericVotesFor = Number(votesFor);
@@ -53,9 +56,40 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   const formattedProposer = `${proposer.slice(0, 6)}...${proposer.slice(-4)}`;
 
   useEffect(() => {
+    if (account.address && status === "active") {
+      // Check if user has already voted
+      const checkVoteStatus = async () => {
+        try {
+          const voted = await hasVoted(config, Number(id), account.address);
+          setUserHasVoted(voted);
+          
+          // Get user's vote weight based on cNGN balance
+          const balance = await checkCngnBalance(config, account.address);
+          const PRECISION = 10n ** 18n;
+          
+          if (balance >= 10_000n * PRECISION) {
+            setUserVoteWeight(10);
+          } else if (balance >= 1_000n * PRECISION) {
+            setUserVoteWeight(5);
+          } else if (balance >= 1n * PRECISION) {
+            setUserVoteWeight(1);
+          } else {
+            setUserVoteWeight(0);
+          }
+        } catch (err) {
+          console.error("Error checking vote status:", err);
+        }
+      };
+      
+      checkVoteStatus();
+    }
+  }, [account.address, config, id, status]);
+
+  useEffect(() => {
     if (isSuccess) {
       console.log(`Transaction confirmed for proposal ${id}, fetching updated data`);
       toast.success("Vote submitted!");
+      setUserHasVoted(true);
       const fetchUpdatedProposal = async () => {
         try {
           const updatedProposalData = await getProposalById(config, Number(id));
@@ -75,17 +109,14 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
   }, [isSuccess, isError, config, id, onUpdate]);
   
   async function handleVote(vote: boolean) {
-    const voted = await hasVoted(config, Number(id), account.address)
-    const balance = await checkCngnBalance(config, account.address)
-
-    if (voted) {
-      toast.warning("You have already voted for this proposal")
-      return
+    if (userHasVoted) {
+      toast.warning("You have already voted for this proposal");
+      return;
     }
     
-    if (Number(balance) == 0) {
-      toast.warning("You have no cNGN tokens please fund wallet");
-      return
+    if (userVoteWeight === 0) {
+      toast.warning("You need at least 1 cNGN token to vote");
+      return;
     }
     
     try {
@@ -210,25 +241,49 @@ const ProposalCard: React.FC<ProposalCardProps> = ({
           <MessageSquare className="h-3.5 w-3.5" /> {commentCount} Comments
         </Button>
 
-        {status === "active" && (
+        {status === "active" && account.address && (
           <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="text-white bg-green-500 hover:bg-green-600 gap-1.5 px-4"
-                onClick={() => handleVote(true)}
-                disabled={isWaiting}
-              >
-                <ArrowUp className="h-3.5 w-3.5" /> Vote For
-              </Button>
-              <Button
-                size="sm"
-                className="text-white bg-red-500 hover:bg-red-600 gap-1.5 px-4"
-                onClick={() => handleVote(false)}
-                disabled={isWaiting}
-              >
-                <ArrowDown className="h-3.5 w-3.5" /> Vote Against
-              </Button>
+            <div className="flex gap-2 items-center">
+              {userHasVoted ? (
+                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400 dark:border-green-900">
+                  <Check className="h-3.5 w-3.5 mr-1.5" /> You've voted
+                </Badge>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    className="text-white bg-green-500 hover:bg-green-600 gap-1.5 px-4"
+                    onClick={() => handleVote(true)}
+                    disabled={isWaiting || userVoteWeight === 0}
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" /> Vote For
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="text-white bg-red-500 hover:bg-red-600 gap-1.5 px-4"
+                    onClick={() => handleVote(false)}
+                    disabled={isWaiting || userVoteWeight === 0}
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" /> Vote Against
+                  </Button>
+                </>
+              )}
+
+              {userVoteWeight > 0 && !userHasVoted && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full text-xs font-medium text-blue-700 dark:text-blue-400">
+                        <Shield className="h-3 w-3" />
+                        {userVoteWeight}x
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Your vote has {userVoteWeight}x voting power</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             {isWaiting && <div className="text-sm text-gray-500">Waiting for transaction...</div>}
           </div>

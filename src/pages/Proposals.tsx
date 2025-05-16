@@ -17,7 +17,7 @@ import { useWaitForTransactionReceipt } from "wagmi";
 
 interface MyVotesProps {
   proposals: ProposalProps[];
-  setActiveTab: (tab: string) => void; // Prop to switch tabs
+  setActiveTab: (tab: string) => void; 
 }
 
 const MyVotes: React.FC<MyVotesProps> = ({ proposals, setActiveTab }) => {
