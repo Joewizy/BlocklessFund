@@ -164,7 +164,7 @@ export function CreateCampaignForm() {
           name="amountGoal"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Funding Goal ($)</FormLabel>
+              <FormLabel>Funding Goal (₦)</FormLabel>
               <FormControl>
                 <Input type="number" placeholder="10,000" {...field} />
               </FormControl>
