@@ -10,6 +10,7 @@ import ViewCampaigns from "./pages/ViewCampaigns";
 import { Providers } from "./providers";
 import MintPage from "./pages/MintPage";
 import Layout from "@/components/Layout"; 
+import ScrollToTop from "@/components/ScrollToTop";
 
 const App = () => (
   <Providers>
@@ -17,8 +18,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
-          {/* Layout routes (with Navbar/Footer) */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="create-campaign" element={<CreateCampaignPage />} />
@@ -26,8 +27,6 @@ const App = () => (
             <Route path="campaigns" element={<ViewCampaigns />} />
             <Route path="mint" element={<MintPage />} />
           </Route>
-
-          {/* Routes without layout (optional) */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
